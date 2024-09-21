@@ -36,6 +36,13 @@ def main():
     )
     print_log(f"User selected course: {section}")
 
+    # Category selection
+    category = st.selectbox(
+        "Select a category:",
+        ["Health", "Dental", "Vision", "Retirement", "Other"],
+    )
+    print_log(f"User selected category: {category}")
+
     # Model selection
     model_choice = st.selectbox(
         "Select a model:",
@@ -74,7 +81,7 @@ def main():
             # Save conversation to database
             print_log("Saving conversation to database")
             save_conversation(
-                st.session_state.conversation_id, user_input, answer_data, section
+                st.session_state.conversation_id, user_input, answer_data, section, category
             )
             print_log("Conversation saved successfully")
             # Generate a new conversation ID for next question
@@ -103,17 +110,26 @@ def main():
 
     # Display recent conversations
     st.subheader("Recent Conversations")
-    relevance_filter = st.selectbox(
-        "Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        relevance_filter = st.selectbox(
+            "Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
+        )
+    with col2:
+        category_filter = st.selectbox(
+            "Filter by category:", ["All", "Health", "Dental", "Vision", "Retirement", "Other"]
+        )
     recent_conversations = get_recent_conversations(
-        limit=5, relevance=relevance_filter if relevance_filter != "All" else None
+        limit=5, 
+        relevance=relevance_filter if relevance_filter != "All" else None,
+        category=category_filter if category_filter != "All" else None
     )
     for conv in recent_conversations:
         st.write(f"Q: {conv['question']}")
         st.write(f"A: {conv['answer']}")
         st.write(f"Relevance: {conv['relevance']}")
         st.write(f"Model: {conv['model_used']}")
+        st.write(f"Category: {conv['category']}")
         st.write("---")
 
     # Display feedback stats

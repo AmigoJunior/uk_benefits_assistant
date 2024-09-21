@@ -6,7 +6,6 @@ from zoneinfo import ZoneInfo
 
 tz = ZoneInfo("Europe/London")
 
-
 def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("POSTGRES_HOST", "postgres"),
@@ -14,7 +13,6 @@ def get_db_connection():
         user=os.getenv("POSTGRES_USER", "your_username"),
         password=os.getenv("POSTGRES_PASSWORD", "your_password"),
     )
-
 
 def init_db():
     conn = get_db_connection()
@@ -29,6 +27,7 @@ def init_db():
                     question TEXT NOT NULL,
                     answer TEXT NOT NULL,
                     section TEXT NOT NULL,
+                    category TEXT NOT NULL,  
                     model_used TEXT NOT NULL,
                     response_time FLOAT NOT NULL,
                     relevance TEXT NOT NULL,
@@ -55,8 +54,7 @@ def init_db():
     finally:
         conn.close()
 
-
-def save_conversation(conversation_id, question, answer_data, section, timestamp=None):
+def save_conversation(conversation_id, question, answer_data, section, category, timestamp=None):
     if timestamp is None:
         timestamp = datetime.now(tz)
     
@@ -66,16 +64,17 @@ def save_conversation(conversation_id, question, answer_data, section, timestamp
             cur.execute(
                 """
                 INSERT INTO conversations 
-                (id, question, answer, section, model_used, response_time, relevance, 
+                (id, question, answer, section, category, model_used, response_time, relevance, 
                 relevance_explanation, prompt_tokens, completion_tokens, total_tokens, 
                 eval_prompt_tokens, eval_completion_tokens, eval_total_tokens, openai_cost, timestamp)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
             """,
                 (
                     conversation_id,
                     question,
                     answer_data["answer"],
                     section,
+                    category,  
                     answer_data["model_used"],
                     answer_data["response_time"],
                     answer_data["relevance"],
@@ -94,7 +93,6 @@ def save_conversation(conversation_id, question, answer_data, section, timestamp
     finally:
         conn.close()
 
-
 def save_feedback(conversation_id, feedback, timestamp=None):
     if timestamp is None:
         timestamp = datetime.now(tz)
@@ -110,8 +108,7 @@ def save_feedback(conversation_id, feedback, timestamp=None):
     finally:
         conn.close()
 
-
-def get_recent_conversations(limit=5, relevance=None):
+def get_recent_conversations(limit=5, relevance=None, category=None):
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=DictCursor) as cur:
@@ -119,16 +116,22 @@ def get_recent_conversations(limit=5, relevance=None):
                 SELECT c.*, f.feedback
                 FROM conversations c
                 LEFT JOIN feedback f ON c.id = f.conversation_id
+                WHERE 1=1
             """
+            params = []
             if relevance:
-                query += f" WHERE c.relevance = '{relevance}'"
+                query += " AND c.relevance = %s"
+                params.append(relevance)
+            if category:
+                query += " AND c.category = %s"
+                params.append(category)
             query += " ORDER BY c.timestamp DESC LIMIT %s"
+            params.append(limit)
 
-            cur.execute(query, (limit,))
+            cur.execute(query, tuple(params))
             return cur.fetchall()
     finally:
         conn.close()
-
 
 def get_feedback_stats():
     conn = get_db_connection()

@@ -47,7 +47,7 @@ def elastic_search_knn(field, vector, section, index_name="benefit-claims"):
         "query_vector": vector,
         "k": 5,
         "num_candidates": 10000,
-        "filter": {"term": {"course": section}},
+        "filter": {"term": {"section": section}},
     }
 
     search_query = {

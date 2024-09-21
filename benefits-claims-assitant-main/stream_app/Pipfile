@@ -7,14 +7,12 @@ name = "pypi"
 openai = "*"
 scikit-learn = "*"
 pandas = "==1.5.3"  # Updated to match requirements.txt
-flask = "*"
 elasticsearch = "*"
-sentence-transformers = "==2.2.2"  # Updated to match requirements.txt
+sentence_transformers = "*"  # Updated to match requirements.txt
 python-dotenv = "*"
-notebook = "==7.1.2"
 hyperopt = "*"
 streamlit = "*"
-numpy = "==2.1.1"  # Match the specific version needed
+numpy = "==1.21.0"  # Match the specific version needed
 psycopg2-binary = "==2.9.6"  # Updated to match requirements.txt
 
 [dev-packages]
