@@ -64,7 +64,7 @@ def setup_elasticsearch():
                 "question": {"type": "text"},
                 "section": {"type": "keyword"},
                 "id": {"type": "keyword"},
-                "question_text_vector": {
+                "question_answer_vector": {
                     "type": "dense_vector",
                     "dims": 384,
                     "index": True,
