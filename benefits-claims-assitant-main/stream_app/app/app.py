@@ -29,19 +29,12 @@ def main():
         st.session_state.count = 0
         print_log("Feedback count initialized to 0")
 
-    # Course selection
+    # Claims selection
     section = st.selectbox(
-        "Select a course:",
+        "Select a claims type:",
         ["general claim benefits", "nhs claim benefits"],
     )
     print_log(f"User selected course: {section}")
-
-    # Category selection
-    category = st.selectbox(
-        "Select a category:",
-        ["Health", "Dental", "Vision", "Retirement", "Other"],
-    )
-    print_log(f"User selected category: {category}")
 
     # Model selection
     model_choice = st.selectbox(
@@ -59,77 +52,96 @@ def main():
 
     if st.button("Ask"):
         print_log(f"User asked: '{user_input}'")
-        with st.spinner("Processing..."):
-            print_log(
-                f"Getting answer from assistant using {model_choice} model and {search_type} search"
-            )
-            start_time = time.time()
-            answer_data = get_answer(user_input, section, model_choice, search_type)
-            end_time = time.time()
-            print_log(f"Answer received in {end_time - start_time:.2f} seconds")
-            st.success("Completed!")
-            st.write(answer_data["answer"])
+    with st.spinner("Processing..."):
+        print_log(f"Getting answer from assistant using {model_choice} model and {search_type} search")
+        start_time = time.time()
+        answer_data = get_answer(user_input, section, model_choice, search_type)
+        end_time = time.time()
+        print_log(f"Answer received in {end_time - start_time:.2f} seconds")
+        st.success("Completed!")
+        
+        # Display the category (section) in the output
+        # st.write(f"Category: {category}")
+        st.write(answer_data["answer"])
 
-            # Display monitoring information
-            st.write(f"Response time: {answer_data['response_time']:.2f} seconds")
-            st.write(f"Relevance: {answer_data['relevance']}")
-            st.write(f"Model used: {answer_data['model_used']}")
-            st.write(f"Total tokens: {answer_data['total_tokens']}")
-            if answer_data["openai_cost"] > 0:
-                st.write(f"OpenAI cost: ${answer_data['openai_cost']:.4f}")
+        # Display monitoring information
+        st.write(f"Response time: {answer_data['response_time']:.2f} seconds")
+        st.write(f"Relevance: {answer_data['relevance']}")
+        st.write(f"Model used: {answer_data['model_used']}")
+        st.write(f"Total tokens: {answer_data['total_tokens']}")
+        if answer_data["openai_cost"] > 0:
+            st.write(f"OpenAI cost: ${answer_data['openai_cost']:.4f}")
 
-            # Save conversation to database
-            print_log("Saving conversation to database")
-            save_conversation(
-                st.session_state.conversation_id, user_input, answer_data, section, category
-            )
-            print_log("Conversation saved successfully")
-            # Generate a new conversation ID for next question
-            st.session_state.conversation_id = str(uuid.uuid4())
-
+        # Save conversation to database (including category)
+        print_log("Saving conversation to database")
+        save_conversation(st.session_state.conversation_id, user_input, answer_data, section)
+        print_log("Conversation saved successfully")
+        st.session_state.conversation_saved = True
     # Feedback buttons
     col1, col2 = st.columns(2)
     with col1:
         if st.button("+1"):
-            st.session_state.count += 1
-            print_log(
-                f"Positive feedback received. New count: {st.session_state.count}"
-            )
-            save_feedback(st.session_state.conversation_id, 1)
-            print_log("Positive feedback saved to database")
+            if st.session_state.conversation_saved:
+                st.session_state.count += 1
+                print_log(
+                    f"Positive feedback received. New count: {st.session_state.count}"
+                )
+                save_feedback(st.session_state.conversation_id, 1)
+                print_log("Positive feedback saved to database")
+            else:
+                st.error("Please ask a question before giving feedback.")
     with col2:
         if st.button("-1"):
-            st.session_state.count -= 1
-            print_log(
-                f"Negative feedback received. New count: {st.session_state.count}"
-            )
-            save_feedback(st.session_state.conversation_id, -1)
-            print_log("Negative feedback saved to database")
+            if st.session_state.conversation_saved:
+                st.session_state.count -= 1
+                print_log(
+                    f"Negative feedback received. New count: {st.session_state.count}"
+                )
+                save_feedback(st.session_state.conversation_id, -1)
+                print_log("Negative feedback saved to database")
+            else:
+                st.error("Please ask a question before giving feedback.")
 
     st.write(f"Current count: {st.session_state.count}")
 
+    # Relevance buttons
+    st.subheader("Relevance Feedback")
+    col3, col4, col5 = st.columns(3)
+    with col3:
+        if st.button("Relevant"):
+            if st.session_state.conversation_saved:
+                save_feedback(st.session_state.conversation_id, "RELEVANT")
+                st.success("Marked as relevant")
+            else:
+                st.error("Please ask a question first.")
+    with col4:
+        if st.button("Partly Relevant"):
+            if st.session_state.conversation_saved:
+                save_feedback(st.session_state.conversation_id, "PARTLY_RELEVANT")
+                st.success("Marked as partly relevant")
+            else:
+                st.error("Please ask a question first.")
+    with col5:
+        if st.button("Non-Relevant"):
+            if st.session_state.conversation_saved:
+                save_feedback(st.session_state.conversation_id, "NON_RELEVANT")
+                st.success("Marked as non-relevant")
+            else:
+                st.error("Please ask a question first.")
+
     # Display recent conversations
     st.subheader("Recent Conversations")
-    col1, col2 = st.columns(2)
-    with col1:
-        relevance_filter = st.selectbox(
-            "Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
-        )
-    with col2:
-        category_filter = st.selectbox(
-            "Filter by category:", ["All", "Health", "Dental", "Vision", "Retirement", "Other"]
-        )
+    relevance_filter = st.selectbox(
+        "Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
+    )
     recent_conversations = get_recent_conversations(
-        limit=5, 
-        relevance=relevance_filter if relevance_filter != "All" else None,
-        category=category_filter if category_filter != "All" else None
+        limit=5, relevance=relevance_filter if relevance_filter != "All" else None
     )
     for conv in recent_conversations:
         st.write(f"Q: {conv['question']}")
         st.write(f"A: {conv['answer']}")
         st.write(f"Relevance: {conv['relevance']}")
         st.write(f"Model: {conv['model_used']}")
-        st.write(f"Category: {conv['category']}")
         st.write("---")
 
     # Display feedback stats

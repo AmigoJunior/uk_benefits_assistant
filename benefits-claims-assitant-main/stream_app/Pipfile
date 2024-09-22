@@ -6,14 +6,17 @@ name = "pypi"
 [packages]
 openai = "*"
 scikit-learn = "*"
-pandas = "==1.5.3"  # Updated to match requirements.txt
+pandas = "*"  # Updated to match requirements.txt
 elasticsearch = "*"
-sentence_transformers = "*"  # Updated to match requirements.txt
 python-dotenv = "*"
 hyperopt = "*"
 streamlit = "*"
-numpy = "==1.21.0"  # Match the specific version needed
-psycopg2-binary = "==2.9.6"  # Updated to match requirements.txt
+numpy = "*"  # Match the specific version needed
+psycopg2-binary = "==2.9.9"  # Updated to match requirements.txt
+python-version = "*"
+sentence-transformers = "*"
+pgcli = "*"
+notebook = "*"
 
 [dev-packages]
 tqdm = "*"

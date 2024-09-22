@@ -26,7 +26,7 @@ SAMPLE_ANSWERS = [
     "The time to process a claim can vary depending on the complexity of the claim and the insurance provider. Typically, simple claims might be processed within a few days to a couple of weeks. More complex claims could take 30 to 60 days. If additional information is required or if there are discrepancies, the process may take longer. Always check with your specific insurance provider for their estimated processing times.",
 ]
 
-COURSES = ["general claim benefits", "nhs claim benefits"]
+SECTION = ["general claim benefits", "nhs claim benefits"]
 MODELS = ["ollama/phi3", "openai/gpt-3.5-turbo", "openai/gpt-4o", "openai/gpt-4o-mini"]
 RELEVANCE = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
 
