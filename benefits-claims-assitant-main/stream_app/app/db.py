@@ -66,14 +66,14 @@ def save_conversation(conversation_id, question, answer_data, section, timestamp
                 (id, question, answer, section, model_used, response_time, relevance, 
                 relevance_explanation, prompt_tokens, completion_tokens, total_tokens, 
                 eval_prompt_tokens, eval_completion_tokens, eval_total_tokens, openai_cost, timestamp)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
             """,
                 (
                     conversation_id,
                     question,
                     answer_data["answer"],
                     section,
-                    category,  
+                    # category,  
                     answer_data["model_used"],
                     answer_data["response_time"],
                     answer_data["relevance"],
