@@ -100,12 +100,16 @@ def save_feedback(conversation_id, feedback, timestamp=None):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO feedback (conversation_id, feedback, timestamp) VALUES (%s, %s, COALESCE(%s, CURRENT_TIMESTAMP))",
-                (conversation_id, feedback, timestamp),
+                """
+                INSERT INTO feedback (conversation_id, feedback, timestamp)
+                VALUES (%s, %s, %s)
+                """,
+                (conversation_id, feedback, timestamp)
             )
         conn.commit()
     finally:
         conn.close()
+
 
 def get_recent_conversations(limit=5, relevance=None):
     conn = get_db_connection()
